@@ -1,0 +1,13 @@
+.venv/
+.env
+*.json
+!task-definition.json
+!pyproject.toml
+*.txt
+*.mp3
+.pytest_cache/
+.vscode/
+__pycache__/
+*.log
+data/
+.DS_Store

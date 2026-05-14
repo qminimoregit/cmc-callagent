@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CMC Assistant Dashboard — Trilingual Call Agent</title>
+  <meta name="description" content="Monitor and manage the CMC Assistant trilingual call agent — local testing, call conversations, and settings." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/dashboard/css/dashboard.css?v=2" />
+</head>
+<body>
+  <div class="app-layout">
+    <!-- ── SIDEBAR NAV ─────────────────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo-container">
+          <span class="brand-flag">🇱🇰</span>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">CMC Assistant</div>
+          <div class="brand-sub">AI Trilingual Agent</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="tab-btn active" data-tab="tester" id="tab-tester">
+          <span class="tab-icon">🎙</span> Local Tester
+        </button>
+        <button class="tab-btn" data-tab="conversations" id="tab-conversations">
+          <span class="tab-icon">📞</span> Conversations
+        </button>
+        <button class="tab-btn" data-tab="appointments" id="tab-appointments">
+          <span class="tab-icon">📅</span> Appointments
+        </button>
+        <button class="tab-btn" data-tab="complaints" id="tab-complaints">
+          <span class="tab-icon">⚠️</span> Complaints
+        </button>
+        <button class="tab-btn" data-tab="settings" id="tab-settings">
+          <span class="tab-icon">⚙️</span> Settings
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="header-status">
+          <span class="status-dot" id="statusDot"></span>
+          <span class="status-label" id="statusLabel">Checking…</span>
+        </div>
+        <div class="header-badges">
+          <span class="badge badge-version">v1.0</span>
+          <span class="badge badge-model">Gemini 3.1 Live API</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── MAIN CONTENT ───────────────────────────────────────────────── -->
+    <div class="main-wrapper">
+      <header class="top-header">
+        <h2 class="page-title" id="pageTitle">Local Tester</h2>
+        <div class="header-actions">
+          <span style="font-size: 0.85rem; font-weight: 600; color: var(--text2); letter-spacing: 0.02em;">Admin</span>
+          <div class="avatar-sm">AD</div>
+        </div>
+      </header>
+      <main class="app-main">
+
+    <!-- ═══ PANEL 1: LOCAL TESTER ═══════════════════════════════════════ -->
+    <section class="panel active" id="panel-tester">
+      <div class="panel-header">
+        <h1 class="panel-title">Local Agent Tester</h1>
+        <p class="panel-desc">Simulate a call with CMC Assistant — press <strong>Start Call</strong> to begin the language-selection flow.</p>
+      </div>
+
+      <div class="tester-layout">
+        <!-- Chat window -->
+        <div class="chat-area">
+          <div class="chat-messages" id="chatMessages">
+            <!-- Pre-call landing screen -->
+            <div class="call-landing" id="callLanding">
+              <!-- Background network dots (decorative) -->
+              <div class="call-bg-dots">
+                <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+              </div>
+
+              <!-- Glassmorphism card -->
+              <div class="call-card">
+                <!-- Flag avatar with glow ring -->
+                <div class="call-avatar-ring">
+                  <div class="call-avatar">🇱🇰</div>
+                </div>
+
+                <!-- Identity -->
+                <div class="call-card-title">Colombo Municipal Council</div>
+                <div class="call-card-sub">CMC Assistant — AI Trilingual Agent</div>
+
+                <!-- Language badges -->
+                <div class="call-card-langs">
+                  <span class="badge badge-si">සිංහල</span>
+                  <span class="badge badge-ta">தமிழ்</span>
+                  <span class="badge badge-en">English</span>
+                </div>
+
+                <!-- Green phone button -->
+                <button class="call-phone-btn" id="startCallBtn">
+                  <div class="call-phone-ripple"></div>
+                  <div class="call-phone-ripple delay1"></div>
+                  <div class="call-phone-circle">
+                    <svg viewBox="0 0 24 24" fill="white" width="32" height="32">
+                      <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>
+                    </svg>
+                  </div>
+                </button>
+                <div class="call-phone-label">Start Call</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input bar — hidden until call starts -->
+          <div class="chat-input-bar hidden" id="chatInputBar">
+            <button class="mic-btn" id="micBtn" title="Hold to record voice">
+              <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+              <span class="mic-label">Hold</span>
+            </button>
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type: sinhala, tamil, or english…" autocomplete="off" />
+            <button class="send-btn" id="sendBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+              Send
+            </button>
+          </div>
+          <div class="recording-bar hidden" id="recordingBar">
+            <div class="audio-visualizer">
+              <div class="audio-bar"></div>
+              <div class="audio-bar"></div>
+              <div class="audio-bar"></div>
+              <div class="audio-bar"></div>
+              <div class="audio-bar"></div>
+            </div>
+            <span>Recording… release to send</span>
+          </div>
+        </div>
+
+        <!-- Session info sidebar -->
+        <div class="session-info">
+          <div class="info-card">
+            <div class="info-title">Session</div>
+            <div class="info-row"><span>Call State</span><span id="callStateLabel" class="badge badge-warn">Idle</span></div>
+            <div class="info-row"><span>Turns</span><span id="turnCount">0</span></div>
+            <div class="info-row"><span>Language</span><span id="langLockStatus"><span class="badge badge-warn">⏳ Not set</span></span></div>
+            <div class="info-row"><span>Last Reply</span><span id="lastLang">—</span></div>
+            <div class="info-row"><span>Escalate?</span><span id="escalateStatus">No</span></div>
+            <div class="info-row"><span>Database</span><span id="dbStatusBadge" class="badge badge-warn">Checking…</span></div>
+            <div class="info-row"><span>Status</span><span id="sessionStatus" class="badge badge-ok">Ready</span></div>
+          </div>
+          <div class="info-card pipeline-card">
+            <div class="info-title">Pipeline</div>
+            <div class="pipeline-step" id="step-stt">
+              <span class="step-dot"></span><span>STT</span><span class="step-status">—</span>
+            </div>
+            <div class="pipeline-step" id="step-llm">
+              <span class="step-dot"></span><span>LLM</span><span class="step-status">—</span>
+            </div>
+            <div class="pipeline-step" id="step-tts">
+              <span class="step-dot"></span><span>TTS</span><span class="step-status">—</span>
+            </div>
+          </div>
+          <button class="btn btn-ghost full-width" id="clearSessionBtn">🔄 New Call</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ PANEL 2: CONVERSATIONS ════════════════════════════════════════ -->
+    <section class="panel" id="panel-conversations">
+      <div class="panel-header">
+        <h1 class="panel-title">Call Conversations</h1>
+        <p class="panel-desc">Browse all Twilio calls with full transcripts and language breakdown.</p>
+      </div>
+
+      <!-- Stats bar -->
+      <div class="stats-bar" id="statsBar">
+        <div class="stat-card">
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-label">Total Calls</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statToday">—</div>
+          <div class="stat-label">Today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statEscalated">—</div>
+          <div class="stat-label">Escalated</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statEscRate">—</div>
+          <div class="stat-label">Esc. Rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statAvgDur">—</div>
+          <div class="stat-label">Avg Duration</div>
+        </div>
+        <div class="stat-card lang-breakdown">
+          <div class="lang-bars" id="langBars"></div>
+          <div class="stat-label">Language Mix</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statBookings">—</div>
+          <div class="stat-label">Total Appointments</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statComplaints">—</div>
+          <div class="stat-label">Total Complaints</div>
+        </div>
+      </div>
+
+      <div class="conv-layout">
+        <!-- Call list sidebar -->
+        <div class="call-list-panel">
+          <div class="call-list-toolbar">
+            <input type="text" class="search-input" id="callSearch" placeholder="Search…" />
+            <select class="filter-select" id="statusFilter">
+              <option value="all">All</option>
+              <option value="completed">Completed</option>
+              <option value="escalated">Escalated</option>
+              <option value="in-progress">Active</option>
+              <option value="failed">Failed</option>
+            </select>
+            <button class="btn btn-sm" id="refreshCallsBtn">↻</button>
+          </div>
+          <div class="call-list" id="callList">
+            <div class="list-empty">No calls yet. Make a call via Twilio to see it here.</div>
+          </div>
+        </div>
+
+        <!-- Transcript view -->
+        <div class="transcript-panel" id="transcriptPanel">
+          <div class="transcript-empty">
+            <div class="empty-icon">📞</div>
+            <div>Select a call to view its transcript</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ PANEL 3: APPOINTMENTS ════════════════════════════════════════ -->
+    <section class="panel" id="panel-appointments">
+      <div class="panel-header">
+        <h1 class="panel-title">Appointments & Bookings</h1>
+        <p class="panel-desc">View and manage citizen appointments across all Municipal Council departments.</p>
+      </div>
+      <div class="table-container">
+        <div class="table-toolbar">
+          <select class="filter-select" id="bookingCategoryFilter">
+            <option value="all">All Departments</option>
+            <option value="Waste Management">Waste Management</option>
+            <option value="Public Health">Public Health</option>
+            <option value="Civil Works">Civil Works</option>
+            <option value="Tax and Revenue">Tax & Revenue</option>
+            <option value="Community Services">Community Services</option>
+          </select>
+          <button class="btn btn-sm" id="refreshBookingsBtn">↻ Refresh</button>
+        </div>
+        <table class="data-table" id="bookingsTable">
+          <thead>
+            <tr>
+              <th>Appointment Date & Time</th>
+              <th>Caller</th>
+              <th>Contact Number</th>
+              <th>Department</th>
+              <th>Service</th>
+              <th>Booked On</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsList">
+            <tr><td colspan="5" class="table-empty">No appointments yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══ PANEL 4: COMPLAINTS ══════════════════════════════════════════ -->
+    <section class="panel" id="panel-complaints">
+      <div class="panel-header">
+        <h1 class="panel-title">Citizen Complaints</h1>
+        <p class="panel-desc">Track and resolve issues reported by citizens.</p>
+      </div>
+      <div class="table-container">
+        <div class="table-toolbar">
+          <select class="filter-select" id="complaintCategoryFilter">
+            <option value="all">All Departments</option>
+            <option value="Waste Management">Waste Management</option>
+            <option value="Public Health">Public Health</option>
+            <option value="Civil Works">Civil Works</option>
+            <option value="Tax and Revenue">Tax & Revenue</option>
+            <option value="Community Services">Community Services</option>
+          </select>
+          <button class="btn btn-sm" id="refreshComplaintsBtn">↻ Refresh</button>
+        </div>
+        <table class="data-table" id="complaintsTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Caller Name</th>
+              <th>Department</th>
+              <th>Issue / Location</th>
+              <th>Description</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="complaintsList">
+            <tr><td colspan="6" class="table-empty">No complaints yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══ PANEL 3: SETTINGS ════════════════════════════════════════════ -->
+    <section class="panel" id="panel-settings">
+      <div class="panel-header">
+        <h1 class="panel-title">Agent Settings</h1>
+        <p class="panel-desc">Configure environment variables, LLM parameters, and the system prompt.</p>
+      </div>
+
+      <div class="settings-layout">
+
+        <!-- Connection test card -->
+        <div class="settings-card">
+          <div class="settings-card-title">🔌 API Connections</div>
+          <div class="connection-tests" id="connectionTests">
+            <div class="conn-row" id="conn-gemini">
+              <span class="conn-icon">🤖</span>
+              <span class="conn-name">Google Gemini</span>
+              <span class="conn-status conn-unknown">—</span>
+            </div>
+            <div class="conn-row" id="conn-google">
+              <span class="conn-icon">🎤</span>
+              <span class="conn-name">Google Cloud STT/TTS</span>
+              <span class="conn-status conn-unknown">—</span>
+            </div>
+            <div class="conn-row" id="conn-twilio">
+              <span class="conn-icon">📱</span>
+              <span class="conn-name">Twilio</span>
+              <span class="conn-status conn-unknown">—</span>
+            </div>
+            <div class="conn-row" id="conn-db">
+              <span class="conn-icon">🗄️</span>
+              <span class="conn-name">PostgreSQL Database</span>
+              <span class="conn-status conn-unknown">—</span>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="testConnectionsBtn">Test All Connections</button>
+        </div>
+
+        <!-- Environment config card -->
+        <div class="settings-card">
+          <div class="settings-card-title">🌐 Environment Config</div>
+          <div class="env-form" id="envForm">
+            <!-- Populated by JS -->
+          </div>
+          <button class="btn btn-primary" id="saveEnvBtn">Save Config</button>
+        </div>
+
+        <!-- Agent parameters card -->
+        <div class="settings-card agent-params-card">
+          <div class="settings-card-title">🧠 Agent Parameters</div>
+          <div class="llm-params">
+            <div class="param-row">
+              <label for="maxTokens">Max Tokens <span class="param-value" id="maxTokensVal">180</span></label>
+              <input type="range" id="maxTokens" min="50" max="500" value="180" class="param-slider" />
+            </div>
+            <div class="param-row">
+              <label for="temperature">Temperature <span class="param-value" id="temperatureVal">0.85</span></label>
+              <input type="range" id="temperature" min="0" max="1" step="0.05" value="0.85" class="param-slider" />
+            </div>
+            <div class="param-row">
+              <label for="speakingSpeed">Speaking Speed <span class="param-value" id="speakingSpeedVal">1.20</span></label>
+              <input type="range" id="speakingSpeed" min="0.5" max="2.0" step="0.1" value="1.2" class="param-slider" />
+            </div>
+            <div class="param-row">
+              <label for="pitch">Pitch <span class="param-value" id="pitchVal">0.00</span></label>
+              <input type="range" id="pitch" min="-20" max="20" step="1" value="0" class="param-slider" />
+            </div>
+            <div class="param-row">
+              <label for="volumeGain">Volume Gain (dB) <span class="param-value" id="volumeGainVal">0.00</span></label>
+              <input type="range" id="volumeGain" min="-10" max="10" step="1" value="0" class="param-slider" />
+            </div>
+          </div>
+          <button class="btn btn-primary" id="saveLlmBtn">Save Parameters</button>
+        </div>
+
+        <!-- Available Slots management (NEW) -->
+        <div class="settings-card settings-card-wide">
+          <div class="settings-card-title">📅 Available Appointment Slots</div>
+          <div class="panel-desc" style="margin-bottom: 1.5rem;">Configure working hours and available slots for each department.</div>
+          
+          <div class="table-container" style="box-shadow: none; border: 1px solid var(--border1); background: rgba(0,0,0,0.1);">
+            <table class="data-table" id="slotsTable">
+              <thead>
+                <tr>
+                  <th>Department</th>
+                  <th>Day</th>
+                  <th>Working Hours</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="slotsList">
+                <tr><td colspan="5" class="table-empty">Loading slots…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Prompt editor card (full width) -->
+        <div class="settings-card settings-card-wide">
+          <div class="settings-card-title">📝 System Prompt Editor</div>
+          <div class="prompt-meta" id="promptMeta">Loading prompt…</div>
+          <textarea class="prompt-editor" id="promptEditor" rows="18" spellcheck="false" placeholder="System prompt will load here…"></textarea>
+          <div class="prompt-actions">
+            <span class="prompt-chars" id="promptChars">0 chars</span>
+            <button class="btn btn-ghost" id="revertPromptBtn">Revert</button>
+            <button class="btn btn-primary" id="savePromptBtn">Save Prompt</button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+      </main>
+    </div> <!-- /.main-wrapper -->
+  </div> <!-- /.app-layout -->
+
+  <!-- ── TOAST ───────────────────────────────────────────────────────── -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ── AUDIO (hidden playback) ─────────────────────────────────────── -->
+  <audio id="replyAudio" hidden></audio>
+
+  <script src="/dashboard/js/tester.js"></script>
+  <script src="/dashboard/js/conversations.js"></script>
+  <script src="/dashboard/js/settings.js"></script>
+  <script src="/dashboard/js/bookings.js"></script>
+  <script src="/dashboard/js/complaints.js"></script>
+  <script src="/dashboard/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: cmc_agent
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d cmc_agent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis (shared session store for all app workers) ───────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save ""
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── App (multiple workers via Gunicorn + Uvicorn) ──────────────────────────
+  app:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql://user:password@db:5432/cmc_agent
+      WEB_CONCURRENCY: "4"          # Gunicorn worker processes
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "8000"
+    volumes:
+      - static_audio:/app/static    # shared audio files across workers
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      replicas: 1                   # increase to 2+ on a multi-core host
+      resources:
+        limits:
+          memory: 1g
+
+  # ── Nginx (reverse proxy + SSL termination) ────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro          # mount your TLS certs here
+      - static_audio:/app/static:ro                # serve audio files directly
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_audio:

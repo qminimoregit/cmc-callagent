@@ -1,0 +1,56 @@
+{
+  "family": "cmc-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::526338062139:role/cmc-ecs-execution-role",
+  "taskRoleArn": "arn:aws:iam::526338062139:role/cmc-ecs-task-role",
+  "containerDefinitions": [
+    {
+      "name": "cmc-assistant",
+      "image": "526338062139.dkr.ecr.ap-south-1.amazonaws.com/cmc-assistant:latest",
+      "portMappings": [
+        {"containerPort": 8000, "protocol": "tcp"}
+      ],
+      "environment": [
+        {"name": "REDIS_URL",       "value": "redis://cmc-redis.nfqscw.0001.aps1.cache.amazonaws.com:6379"},
+        {"name": "S3_AUDIO_BUCKET", "value": "cmc-assistant-audio-526338062139"},
+        {"name": "BASE_URL",        "value": "http://cmc-alb-464822195.ap-south-1.elb.amazonaws.com"},
+        {"name": "GOOGLE_CREDENTIALS_SECRET_ARN",
+         "value": "arn:aws:secretsmanager:ap-south-1:526338062139:secret:cmc/google_credentials-S9Ym0y"}
+      ],
+      "secrets": [
+        {"name": "ANTHROPIC_API_KEY",
+         "valueFrom": "arn:aws:secretsmanager:ap-south-1:526338062139:secret:cmc/anthropic_api_key-Q3JFfz"},
+        {"name": "TWILIO_ACCOUNT_SID",
+         "valueFrom": "arn:aws:secretsmanager:ap-south-1:526338062139:secret:cmc/twilio_account_sid-eZYtwE"},
+        {"name": "TWILIO_AUTH_TOKEN",
+         "valueFrom": "arn:aws:secretsmanager:ap-south-1:526338062139:secret:cmc/twilio_auth_token-Krwnti"},
+        {"name": "TWILIO_PHONE_NUMBER",
+         "valueFrom": "arn:aws:secretsmanager:ap-south-1:526338062139:secret:cmc/twilio_phone_number-o9AHhP"},
+        {"name": "DATABASE_URL",
+         "valueFrom": "arn:aws:secretsmanager:ap-south-1:526338062139:secret:cmc/database_url-Z0tpxi"},
+        {"name": "ESCALATION_NUMBER",
+         "valueFrom": "arn:aws:secretsmanager:ap-south-1:526338062139:secret:cmc/escalation_number-QMbSeC"},
+        {"name": "GEMINI_API_KEY",
+         "valueFrom": "arn:aws:secretsmanager:ap-south-1:526338062139:secret:cmc/gemini_api_key-qhW89g"}
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/cmc-assistant",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}
