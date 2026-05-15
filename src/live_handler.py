@@ -21,11 +21,13 @@ Fixes applied vs original
 """
 
 from __future__ import annotations
+from typing import Any
 
 import asyncio
 import base64
 import json
 import logging
+import os
 import audioop
 from fastapi import WebSocket, WebSocketDisconnect
 from google import genai
@@ -103,10 +105,18 @@ async def media_stream_live(websocket: WebSocket) -> None:
     # ── Fix 9: Per-session resampler states ──────────────────────────────────
     # audioop.ratecv is stateful; threading the state avoids reconstruction
     # artefacts at chunk boundaries (clicking/popping that confuses STT).
-    _in_resample_state:  object = None   # 8kHz → 16kHz (Twilio → Gemini)
-    _out_resample_state: object = None   # 24kHz → 8kHz  (Gemini → Twilio)
+    _in_resample_state:  Any = None   # 8kHz → 16kHz (Twilio → Gemini)
+    _out_resample_state: Any = None   # 24kHz → 8kHz  (Gemini → Twilio)
 
-    client = genai.Client()
+    # ⚡ Production Fix: Explicitly pass API key to the Gemini client
+    # Explicitly pass the API key to avoid initialization errors in production
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        logger.error("❌ GEMINI_API_KEY not found in .env! Live stream will fail.")
+        await websocket.close()
+        return
+
+    client = genai.Client(api_key=api_key)
 
     # Build a default system prompt; will be rebuilt after we learn the lang
     sys_prompt = build_system_prompt(locked_lang)
@@ -171,7 +181,6 @@ async def media_stream_live(websocket: WebSocket) -> None:
                             )
 
                         elif event == "media":
-                            nonlocal _in_resample_state
                             chunk = base64.b64decode(data["media"]["payload"])
                             # MULAW → 8kHz LINEAR16 PCM
                             pcm_8k = audioop.ulaw2lin(chunk, 2)
@@ -226,9 +235,9 @@ async def media_stream_live(websocket: WebSocket) -> None:
                                 _out_resample_state = None
 
                             model_turn = server_content.model_turn
-                            if model_turn:
+                            if model_turn and model_turn.parts:
                                 for part in model_turn.parts:
-                                    if part.inline_data:
+                                    if part.inline_data and part.inline_data.data:
                                         # Gemini outputs 24kHz LINEAR16 PCM
                                         pcm_24k = part.inline_data.data
                                         # ⚡ Fix 9: Thread output resampler state
@@ -251,39 +260,40 @@ async def media_stream_live(websocket: WebSocket) -> None:
                         # ── Tool call handling ────────────────────────────────
                         elif response.tool_call is not None:
                             tool_call = response.tool_call
-                            logger.info(
-                                "Gemini tool call for call %s: %s",
-                                call_sid, tool_call,
-                            )
-
-                            function_responses = []
-                            # ⚡ Fix 1 (Tool): Dispatch ALL tool calls concurrently
-                            # in thread pool so we never block this async task.
-                            tasks = [
-                                _dispatch_tool(
-                                    fc.name,
-                                    dict(fc.args) if fc.args else {},
-                                    call_sid or "unknown",
-                                )
-                                for fc in tool_call.function_calls
-                            ]
-                            results = await asyncio.gather(*tasks)
-
-                            for fc, result in zip(tool_call.function_calls, results):
+                            if tool_call.function_calls:
                                 logger.info(
-                                    "🔧 Tool %s → %s", fc.name, result
-                                )
-                                function_responses.append(
-                                    types.FunctionResponse(
-                                        name=fc.name,
-                                        id=fc.id,
-                                        response=result,
-                                    )
+                                    "Gemini tool call for call %s: %s",
+                                    call_sid, tool_call,
                                 )
 
-                            await session.send_tool_response(
-                                tool_responses=function_responses
-                            )
+                                function_responses = []
+                                # ⚡ Fix 1 (Tool): Dispatch ALL tool calls concurrently
+                                # in thread pool so we never block this async task.
+                                tasks = [
+                                    _dispatch_tool(
+                                        fc.name or "unknown",
+                                        dict(fc.args) if fc.args else {},
+                                        call_sid or "unknown",
+                                    )
+                                    for fc in tool_call.function_calls
+                                ]
+                                results = await asyncio.gather(*tasks)
+
+                                for fc, result in zip(tool_call.function_calls, results):
+                                    logger.info(
+                                        "🔧 Tool %s → %s", fc.name, result
+                                    )
+                                    function_responses.append(
+                                        types.FunctionResponse(
+                                            name=fc.name,
+                                            id=fc.id,
+                                            response=result,
+                                        )
+                                    )
+
+                                await session.send_tool_response(
+                                    function_responses=function_responses
+                                )
 
                 except Exception as exc:
                     logger.error(

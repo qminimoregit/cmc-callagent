@@ -54,6 +54,7 @@ services:
       - "8000"
     volumes:
       - static_audio:/app/static    # shared audio files across workers
+      - ./call-agent-494117-55ae95b603b0.json:/app/call-agent-494117-55ae95b603b0.json:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s

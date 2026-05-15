@@ -380,9 +380,10 @@ async def gather(request: Request):
                 except Exception as exc:
                     logger.warning("Could not synthesize confirmation for call %s: %s", call_sid, exc)
 
-                # Construct WebSocket URL from BASE_URL (CloudPanel handles the SSL certificate)
+                # Cleanly construct WebSocket URL (avoiding double slashes)
+                base_domain = BASE_URL.replace("https://", "").replace("http://", "").rstrip("/")
                 ws_scheme = "wss://" if BASE_URL.startswith("https") else "ws://"
-                wss_url = BASE_URL.replace("https://", ws_scheme).replace("http://", ws_scheme)
+                wss_url = f"{ws_scheme}{base_domain}"
                 
                 logger.info("Connecting WebSocket Media Stream for call %s → %s", call_sid, wss_url)
                 response.pause(length=1)

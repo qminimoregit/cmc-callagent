@@ -12,13 +12,14 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Install Python dependencies first (layer cache)
+# Copy app source
+COPY src/ ./src/
 COPY pyproject.toml .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir uv \
     && uv pip install --system --no-cache . \
     && uv pip install --system --no-cache gunicorn
-
-# Copy app source
-COPY src/ ./src/
 COPY dashboard/ ./dashboard/
 COPY static/ ./static/
 COPY main.py .
